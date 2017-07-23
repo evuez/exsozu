@@ -34,7 +34,7 @@ defmodule ExSozu do
 
   def handle_call({:send, commands}, _from, state = %{socket: socket}) do
     commands = Enum.reverse(commands)
-               |> Enum.map(&Encoder.encode/1)
+               |> Enum.map(&Encoder.encode!/1)
                |> Enum.join(<<0>>)
                |> Kernel.<>(<<0>>)
 

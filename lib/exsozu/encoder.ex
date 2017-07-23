@@ -1,5 +1,5 @@
 defmodule ExSozu.Encoder do
-  def encode(command) do
+  def encode!(command) do
     command
     |> prepare_types
     |> remove_nils
