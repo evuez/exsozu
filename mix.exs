@@ -7,7 +7,8 @@ defmodule ExSozu.Mixfile do
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps()]
+     deps: deps(),
+     aliases: aliases()]
   end
 
   def application do
@@ -18,5 +19,9 @@ defmodule ExSozu.Mixfile do
 
   defp deps do
     [{:poison, "~> 3.1"}]
+  end
+
+  defp aliases do
+    ["test": ["test --no-start"]]
   end
 end
