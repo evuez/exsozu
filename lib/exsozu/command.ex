@@ -1,142 +1,89 @@
 defmodule ExSozu.Command do
+  import ExSozu.Macros
   alias ExSozu.Command
 
   defstruct [:id, :type, :data, :proxy_id, version: 0]
 
   @id_length 16
 
+
   # State
 
-  def status(commands, opts \\ []) do
-    [config(:proxy, %{type: :status}, opts) | commands]
-  end
-
-  def dump_state(commands, opts \\ []) do
-    [config(:dump_state, opts) | commands]
-  end
-
-  def save_state(commands, path, opts \\ []) do
-    [config(:save_state, %{path: path}, opts) | commands]
-  end
-
-  def load_state(commands, path, opts \\ []) do
-    [config(:load_state, %{path: path}, opts) | commands]
-  end
+  defcommand :status, :proxy, do: %{type: :status}
+  defcommand :dump_state, :dump_state, do: nil
+  defcommand :save_state, :save_state, [path], do: %{path: path}
+  defcommand :load_state, :load_state, [path], do: %{path: path}
 
   # Lifecycle
 
-  def soft_stop(commands, opts \\ []) do
-    [config(:proxy, %{type: :soft_stop}, opts) | commands]
-  end
-
-  def hard_stop(commands, opts \\ []) do
-    [config(:proxy, %{type: :hard_stop}, opts) | commands]
-  end
+  defcommand :soft_stop, :proxy, do: %{type: :soft_stop}
+  defcommand :hard_stop, :proxy, do: %{type: :hard_stop}
 
   # Fronts
 
-  def add_http_front(commands, app_id, host, path_begin, opts \\ []) do
-    [config(
-      :proxy,
-      %{type: :add_http_front,
-        data:
-          %{app_id: app_id,
-            hostname: host,
-            path_begin: path_begin}},
-      opts) | commands]
+  defcommand :add_http_front, :proxy, [app_id, host, path_begin] do
+    %{type: :add_http_front,
+      data: %{app_id: app_id,
+              hostname: host,
+              path_begin: path_begin}}
   end
-
-  def add_https_front(commands, app_id, host, path_begin, fingerprint, opts \\ []) do
-    [config(
-      :proxy,
-      %{type: :add_https_front,
-        data:
-          %{app_id: app_id,
-            hostname: host,
-            path_begin: path_begin,
-            fingerprint: fingerprint}},
-      opts) | commands]
+  defcommand :add_https_front, :proxy, [app_id, host, path_begin, fingerprint] do
+    %{type: :add_https_front,
+      data: %{app_id: app_id,
+              hostname: host,
+              path_begin: path_begin,
+              fingerprint: fingerprint}}
   end
-
-  def remove_http_front(commands, app_id, host, path_begin, opts \\ []) do
-    [config(
-      :proxy,
-      %{type: :remove_http_front,
-        data:
-          %{app_id: app_id,
-            hostname: host,
-            path_begin: path_begin}},
-      opts) | commands]
+  defcommand :remove_http_front, :proxy, [app_id, host, path_begin] do
+    %{type: :remove_http_front,
+      data: %{app_id: app_id,
+              hostname: host,
+              path_begin: path_begin}}
   end
-
-  def remove_https_front(commands, app_id, host, path_begin, fingerprint, opts \\ []) do
-    [config(
-      :proxy,
-      %{type: :remove_https_front,
-        data:
-          %{app_id: app_id,
-            hostname: host,
-            path_begin: path_begin,
-            fingerprint: fingerprint}},
-      opts) | commands]
+  defcommand :remove_https_front, :proxy, [app_id, host, path_begin, fingerprint] do
+    %{type: :remove_https_front,
+      data: %{app_id: app_id,
+              hostname: host,
+              path_begin: path_begin,
+              fingerprint: fingerprint}}
   end
 
   # Workers
 
-  def list_workers(commands, opts \\ []) do
-    [config(:list_workers, opts) | commands]
-  end
+  defcommand :list_workers, :list_workers, do: nil
 
   # Instances
 
-  def add_instance(commands, app_id, ip_addr, port, opts \\ []) do
-    [config(
-      :proxy,
-      %{type: :add_instance,
-        data:
-          %{app_id: app_id,
-            ip_address: ip_addr,
-            port: port}},
-      opts) | commands]
+  defcommand :add_instance, :proxy, [app_id, ip_addr, port] do
+    %{type: :add_instance,
+      data: %{app_id: app_id,
+              ip_address: ip_addr,
+              port: port}}
   end
-
-  def remove_instance(commands, app_id, ip_addr, port, opts \\ []) do
-    [config(
-      :proxy,
-      %{type: :remove_instance,
-        data:
-          %{app_id: app_id,
-            ip_address: ip_addr,
-            port: port}},
-      opts) | commands]
+  defcommand :remove_instance, :proxy, [app_id, ip_addr, port] do
+    %{type: :remove_instance,
+      data: %{app_id: app_id,
+              ip_address: ip_addr,
+              port: port}}
   end
 
   # Certificates
 
-  def add_certificate(commands, cert, cert_chain, key, opts \\ []) do
-    [config(
-      :proxy,
-      %{type: :add_certificate,
-        data:
-          %{certificate: cert,
-            certificate_chain: cert_chain,
-            key: key}},
-      opts) | commands]
+  defcommand :add_certificate, :proxy, [cert, cert_chain, key] do
+    %{type: :add_certificate,
+      data: %{certificate: cert,
+              certificate_chain: cert_chain,
+              key: key}}
   end
-
-  def remove_certificate(commands, data, opts \\ []) do
-    [config(:proxy, %{type: :remove_certificate, data: data}, opts) | commands]
-  end
+  defcommand :remove_certificate, :proxy, [data],
+    do: %{type: :remove_certificate, data: data}
 
   # Upgrade
 
-  def upgrade_master(commands, opts \\ []) do
-    [config(:upgrade_master, opts) | commands]
-  end
+  defcommand :upgrade_master, :upgrade_master, do: nil
 
   # Helpers
 
-  defp config(type, opts), do: config(type, nil, opts)
   defp config(type, data, opts) do
     %Command{
       id: id(),
