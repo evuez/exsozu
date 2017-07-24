@@ -1,12 +1,21 @@
-defmodule ExSozu.Encoder do
+defmodule ExSozu.Wire do
+  alias ExSozu.Multi
+
+  def encode!(%Multi{actions: actions}) do
+    actions
+    |> Enum.map(fn {_, action} -> encode!(action) end)
+    |> Enum.reverse
+  end
   def encode!(command) do
-    command
-    |> prepare_types
-    |> remove_nils
-    |> Poison.encode!
+    command = command
+              |> encode_types
+              |> remove_nils
+              |> Poison.encode!
+
+    command <> <<0>>
   end
 
-  defp prepare_types(command) do
+  defp encode_types(command) do
     command = Map.update!(command, :type, &upcase_atom/1)
     with %{data: %{type: type}} <- command,
       do: put_in(command.data.type, upcase_atom(type))

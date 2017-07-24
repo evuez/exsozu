@@ -9,7 +9,7 @@ defmodule ExSozu.Application do
     import Supervisor.Spec, warn: false
 
     children = [
-      worker(ExSozu, [], restart: :transient),
+      worker(ExSozu.Client, [], restart: :transient),
     ]
 
     opts = [strategy: :one_for_one, name: ExSozu.Supervisor]
