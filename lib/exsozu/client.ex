@@ -1,14 +1,17 @@
 defmodule ExSozu.Client do
   use GenServer
 
+  alias ExSozu.Command
+  alias ExSozu.Multi
   alias ExSozu.Wire
 
-  @initial %{socket: nil}
+  defstruct [socket: nil, commands: %{}]
+
   @sock_path "sozu/bin/command_folder/sock"
-  @sock_opts [:local, :binary, active: false]
+  @sock_opts [:local, :binary, active: true]
 
   def start_link do
-    GenServer.start_link(__MODULE__, @initial, name: __MODULE__)
+    GenServer.start_link(__MODULE__, %__MODULE__{}, name: __MODULE__)
   end
 
   def init(state) do
@@ -18,23 +21,39 @@ defmodule ExSozu.Client do
 
   # API
 
-  def send(commands), do: GenServer.cast(__MODULE__, {:send, commands})
-
   def send!(commands) do
-    {:ok, response} = send(commands)
-    response
+    {:ok, answer} = GenServer.call(__MODULE__, {:send, commands})
+    answer
   end
 
   # Callbacks
 
-  def handle_cast({:send, commands}, state = %{socket: socket}) do
+  def handle_call({:send, commands}, from, state = %{socket: socket}) do
     :ok = :gen_tcp.send(socket, Wire.encode!(commands))
 
-    {:noreply, state}
+    {:noreply, save_client(state, from, commands)}
   end
 
-  def handle_call({:recv, ids}, _from, state = %{socket: socket}) do
-    {:ok, response} = :gen_tcp.recv(socket, 0)
-    {:reply, response, state}
+  def handle_info({:tcp, _, answer}, state = %{commands: commands}) do
+    answer = Wire.decode!(answer)
+    {command, commands} = Map.pop(commands, answer.id)
+
+    GenServer.reply(command.client, {:ok, answer})
+
+    {:noreply, %{state | commands: commands}}
+  end
+
+  # Helpers
+
+  defp save_client(state, client, command = %Command{}) do
+    commands = Map.put(state.commands, command.id, %{command | client: client})
+    %{state | commands: commands}
+  end
+  defp save_client(state, client, %Multi{commands: commands}) do
+    commands = commands
+               |> Enum.map(fn command -> {command.id, %{command | client: client}} end)
+               |> Enum.into(%{})
+
+    %{state | commands: Map.merge(state.commands, commands)}
   end
 end

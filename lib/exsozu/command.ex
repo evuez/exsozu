@@ -1,7 +1,8 @@
 defmodule ExSozu.Command do
   alias ExSozu.Command
 
-  defstruct [:id, :type, :data, :proxy_id, version: 0]
+  @derive {Poison.Encoder, except: [:client, :name]}
+  defstruct [:client, :name, :id, :type, :data, :proxy_id, version: 0]
 
   @id_length 16
 

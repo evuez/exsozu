@@ -18,7 +18,7 @@ defmodule ExSozu.CommandTest do
 
   def execute_multi(command, args \\ []) do
     apply(ExSozu.Multi, command, [ExSozu.Multi.new(), command | args])
-    |> Map.fetch!(:actions) |> hd |> elem(1)
+    |> Map.fetch!(:commands) |> hd
     |> ExSozu.Wire.encode!
     |> String.trim_trailing(<<0>>)
     |> Poison.decode!

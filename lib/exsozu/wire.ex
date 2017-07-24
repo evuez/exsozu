@@ -1,9 +1,10 @@
 defmodule ExSozu.Wire do
+  alias ExSozu.Answer
   alias ExSozu.Multi
 
-  def encode!(%Multi{actions: actions}) do
-    actions
-    |> Enum.map(fn {_, action} -> encode!(action) end)
+  def encode!(%Multi{commands: commands}) do
+    commands
+    |> Enum.map(&encode!/1)
     |> Enum.reverse
   end
   def encode!(command) do
@@ -13,6 +14,12 @@ defmodule ExSozu.Wire do
               |> Poison.encode!
 
     command <> <<0>>
+  end
+
+  def decode!(answer) do
+    answer
+    |> String.trim_trailing(<<0>>)
+    |> Poison.decode!(as: %Answer{})
   end
 
   defp encode_types(command) do
