@@ -1,8 +1,49 @@
 defmodule ExSozuTest do
   use ExUnit.Case
+  alias ExSozu.Command
+  alias ExSozu.Answer
   doctest ExSozu
 
-  test "the truth" do
-    assert 1 + 1 == 2
+  setup_all do
+    Application.ensure_all_started(:exsozu)
+    :ok
+  end
+
+  test "add_instance/3 and remove_instance/3" do
+    assert %Answer{status: "OK"} =
+      ExSozu.command!(Command.add_instance("MyApp", "127.0.0.1", 8001))
+    assert %Answer{status: "OK"} =
+      ExSozu.command!(Command.remove_instance("MyApp", "127.0.0.1", 8001))
+  end
+
+  test "dump_state/0" do
+    assert %Answer{message:
+      %{"state" => %{"certificates" => %{}, "http_addresses" => [],
+        "http_fronts" => %{"MyApp" => _},
+        "https_addresses" => [], "https_fronts" => %{},
+        "instances" => %{"MyApp" => _}}}} =
+          ExSozu.command!(Command.dump_state())
+  end
+
+  test "list_workers/0 returns a valid command" do
+    assert %Answer{data: %{"data" => data, "type" => "WORKERS"}, status: "OK"} =
+      ExSozu.command!(Command.list_workers())
+    assert [%{"run_state" => "RUNNING"}, %{"run_state" => "RUNNING"}] = data
+  end
+
+  test "save_state/1 and load_state/1" do
+    assert %Answer{status: "OK"} =
+      ExSozu.command!(Command.save_state("state.json"))
+    assert %Answer{status: "OK"} =
+      ExSozu.command!(Command.load_state("state.json"))
+  end
+
+  test "status/0 returns a valid command" do
+    assert %Answer{status: "OK"} = ExSozu.command!(Command.status())
+  end
+
+  test "upgrade_master/0" do
+    assert %Answer{status: "OK"} = ExSozu.command!(Command.upgrade_master())
+    :timer.sleep(4000)
   end
 end

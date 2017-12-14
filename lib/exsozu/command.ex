@@ -1,4 +1,18 @@
 defmodule ExSozu.Command do
+  @moduledoc """
+  Provides a set of helpers to prepare commands for Sozu.
+
+  If you can't find a command in this list, you can create one like this:
+
+      %ExSozu.Command{
+        id: "<some random id>",
+        type: <type (must be an atom)>,
+        proxy_id: <the proxy id, if any>,
+        data: <whatever needs to be send>
+      }
+
+  You can then send it using `ExSozu.command!/1`.
+  """
   alias ExSozu.Command
 
   @derive {Poison.Encoder, except: [:client, :name]}
@@ -6,7 +20,7 @@ defmodule ExSozu.Command do
 
   @id_length 16
 
-  def to_json!(%__MODULE__{} = command) do
+  def to_json!(command = %__MODULE__{}) do
     command = Map.update!(command, :type, &upcase_atom/1)
     command = with %{data: %{type: type}} <- command,
                 do: put_in(command.data.type, upcase_atom(type))

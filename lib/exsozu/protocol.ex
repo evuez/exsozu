@@ -1,4 +1,8 @@
 defmodule ExSozu.Protocol do
+  @moduledoc """
+  Provides functions to work with
+  [Sozu's socket message format](https://github.com/sozu-proxy/sozu/tree/master/command).
+  """
   alias ExSozu.Answer
   alias ExSozu.Command
 

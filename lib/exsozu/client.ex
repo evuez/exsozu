@@ -1,4 +1,7 @@
 defmodule ExSozu.Client do
+  @moduledoc """
+  Handles the connection to Sozu.
+  """
   use GenServer
 
   require Logger
@@ -83,7 +86,7 @@ defmodule ExSozu.Client do
 
     send(self(), :reconnect)
 
-    {:noreply, state}
+    {:noreply, %{state | socket: nil}}
   end
 
   def handle_info(:reconnect, state = %{retries: retries}) do

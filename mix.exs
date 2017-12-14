@@ -18,7 +18,8 @@ defmodule ExSozu.Mixfile do
   end
 
   defp deps do
-    [{:poison, "~> 3.1"}]
+    [{:poison, "~> 3.1"},
+     {:credo, "~> 0.8"}]
   end
 
   defp aliases do

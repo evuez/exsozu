@@ -1,4 +1,8 @@
 defmodule ExSozu.Answer do
+  @moduledoc """
+  Defines the structure for Sozu's answers.
+  """
+
   @derive [Poison.Encoder]
   defstruct [:id, :status, :message, :data]
 

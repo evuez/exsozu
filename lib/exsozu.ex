@@ -1,6 +1,6 @@
 defmodule ExSozu do
   @moduledoc """
-  Documentation for ExSozu.
+  Provides the main API to interface with Sozu.
   """
 
   alias ExSozu.Client
