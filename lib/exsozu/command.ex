@@ -6,6 +6,19 @@ defmodule ExSozu.Command do
 
   @id_length 16
 
+  def to_json!(%__MODULE__{} = command) do
+    command = Map.update!(command, :type, &upcase_atom/1)
+    command = with %{data: %{type: type}} <- command,
+                do: put_in(command.data.type, upcase_atom(type))
+
+    command = with %{proxy_id: nil} <- command, do: Map.delete(command, :proxy_id)
+    command = with %{data: nil} <- command, do: Map.delete(command, :data)
+
+    Poison.encode!(command)
+  end
+
+  defp upcase_atom(atom), do: atom |> Atom.to_string |> String.upcase
+
   # State
 
   def status(opts \\ []) do

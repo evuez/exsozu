@@ -2,12 +2,12 @@ defmodule ExSozu.Client do
   use GenServer
 
   alias ExSozu.Command
-  alias ExSozu.Multi
-  alias ExSozu.Wire
+  alias ExSozu.Answer
+  alias ExSozu.Protocol
 
-  defstruct [socket: nil, commands: %{}]
+  defstruct [socket: nil, commands: %{}, partial: nil]
 
-  @sock_path "sozu/bin/command_folder/sock"
+  @sock_path Application.fetch_env!(:exsozu, :sock_path)
   @sock_opts [:local, :binary, active: true]
 
   def start_link do
@@ -29,18 +29,23 @@ defmodule ExSozu.Client do
   # Callbacks
 
   def handle_call({:send, commands}, from, state = %{socket: socket}) do
-    :ok = :gen_tcp.send(socket, Wire.encode!(commands))
+    :ok = :gen_tcp.send(socket, Protocol.encode!(commands))
 
     {:noreply, save_client(state, from, commands)}
   end
 
-  def handle_info({:tcp, _, answer}, state = %{commands: commands}) do
-    answer = Wire.decode!(answer)
-    {command, commands} = Map.pop(commands, answer.id)
+  def handle_info({:tcp, _, message}, state = %{commands: commands, partial: partial}) do
+    {answers, partial} = Protocol.decode!(message, partial)
 
-    GenServer.reply(command.client, {:ok, answer})
+    commands = Enum.reduce(answers, commands, fn(answer = %Answer{id: id}, commands) ->
+      {%Command{client: client}, commands} = Map.pop(commands, id)
 
-    {:noreply, %{state | commands: commands}}
+      GenServer.reply(client, {:ok, answer})
+
+      commands
+    end)
+
+    {:noreply, %{state | commands: commands, partial: partial}}
   end
 
   # Helpers
@@ -48,12 +53,5 @@ defmodule ExSozu.Client do
   defp save_client(state, client, command = %Command{}) do
     commands = Map.put(state.commands, command.id, %{command | client: client})
     %{state | commands: commands}
-  end
-  defp save_client(state, client, %Multi{commands: commands}) do
-    commands = commands
-               |> Enum.map(fn command -> {command.id, %{command | client: client}} end)
-               |> Enum.into(%{})
-
-    %{state | commands: Map.merge(state.commands, commands)}
   end
 end
