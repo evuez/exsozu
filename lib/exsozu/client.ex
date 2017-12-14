@@ -7,18 +7,24 @@ defmodule ExSozu.Client do
   alias ExSozu.Answer
   alias ExSozu.Protocol
 
-  defstruct [socket: nil, commands: %{}, partial: nil]
+  defstruct [socket: nil, commands: %{a: :b}, partial: nil, retries: 0]
 
   @sock_path Application.fetch_env!(:exsozu, :sock_path)
   @sock_opts [:local, :binary, active: :once]
+  @retry_delay 500
 
   def start_link do
     GenServer.start_link(__MODULE__, %__MODULE__{}, name: __MODULE__)
   end
 
   def init(state) do
-    {:ok, socket} = :gen_tcp.connect({:local, @sock_path}, 0, @sock_opts)
-    {:ok, %{state | socket: socket}}
+    case :gen_tcp.connect({:local, @sock_path}, 0, @sock_opts) do
+      {:ok, socket} -> {:ok, %{state | socket: socket}}
+      {:error, _} ->
+        Logger.error "Cannot connect to Sozu, trying to reconnect..."
+        send(self(), :reconnect)
+        {:ok, state}
+    end
   end
 
   # API
@@ -67,10 +73,33 @@ defmodule ExSozu.Client do
     {:noreply, %{state | commands: commands, partial: partial}}
   end
 
-  def handle_info({:tcp_closed, _port}, state) do
+  def handle_info({:tcp_closed, _port}, %{commands: commands}) when commands == %{} do
     Logger.warn "Connection closed."
 
+    {:noreply, %__MODULE__{}}
+  end
+  def handle_info({:tcp_closed, _port}, state) do
+    Logger.error "Connection closed with pending commands, trying to reconnect..."
+
+    send(self(), :reconnect)
+
     {:noreply, state}
+  end
+
+  def handle_info(:reconnect, state = %{retries: retries}) do
+    case :gen_tcp.connect({:local, @sock_path}, 0, @sock_opts) do
+      {:ok, socket} ->
+        Logger.info "Reconnected!"
+
+        {:noreply, %{state | socket: socket, retries: 0}}
+      {:error, _} ->
+        delay = round(@retry_delay * :math.pow(2, retries))
+        Logger.warn "Could not connect to Sozu, retrying in #{delay / 1000} seconds..."
+
+        Process.send_after(self(), :reconnect, delay)
+
+        {:noreply, %{state | socket: nil, retries: retries + 1}}
+    end
   end
 
   # Helpers
