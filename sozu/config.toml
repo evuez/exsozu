@@ -1,0 +1,21 @@
+command_socket = "./data/sock"
+saved_state    = "./data/state.json"
+log_level      = "info"
+log_target     = "stdout"
+command_buffer_size = 16384
+worker_count = 1
+handle_process_affinity = false
+max_connections = 500
+max_buffers = 500
+buffer_size = 16384
+
+[http]
+address = "0.0.0.0"
+port = 8080
+buffer_size = 16384
+
+[applications]
+[applications.Test]
+hostname   = "localhost"
+frontends = ["HTTP"]
+backends  = ["127.0.0.1:8000"]

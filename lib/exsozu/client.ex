@@ -10,13 +10,14 @@ defmodule ExSozu.Client do
   alias ExSozu.Answer
   alias ExSozu.Protocol
 
-  defstruct [socket: nil, commands: %{a: :b}, partial: nil, retries: 0]
+  defstruct [socket: nil, commands: %{}, partial: nil, retries: 0]
 
   @sock_path Application.fetch_env!(:exsozu, :sock_path)
   @sock_opts [:local, :binary, active: :once]
   @retry_delay 500
 
   def start_link do
+    IO.inspect :gen_tcp.connect({:local, @sock_path}, 0, @sock_opts), label: "gen tcp"
     GenServer.start_link(__MODULE__, %__MODULE__{}, name: __MODULE__)
   end
 

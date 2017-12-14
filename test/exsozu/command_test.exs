@@ -36,7 +36,7 @@ defmodule ExSozu.CommandTest do
   end
 
   test "add_instance/4 returns a valid command" do
-    assert fetch_asset!("add_instance") == execute(:add_instance, ["xxx", "127.0.0.1", 8080])
+    assert fetch_asset!("add_instance") == execute(:add_instance, ["xxx", "xxx-0", "127.0.0.1", 8080])
   end
 
   test "dump_state/1 returns a valid command" do
@@ -68,7 +68,7 @@ defmodule ExSozu.CommandTest do
   end
 
   test "remove_instance/4 returns a valid command" do
-    assert fetch_asset!("remove_instance") == execute(:remove_instance, ["xxx", "127.0.0.1", 8080])
+    assert fetch_asset!("remove_instance") == execute(:remove_instance, ["xxx", "xxx-0", "127.0.0.1", 8080])
   end
 
   test "save_state/2 returns a valid command" do

@@ -101,14 +101,14 @@ defmodule ExSozu.Command do
 
   # Instances
 
-  def add_instance(app_id, ip_addr, port, opts \\ []) do
-    data = %{app_id: app_id, ip_address: ip_addr, port: port}
+  def add_instance(app_id, instance_id, ip_addr, port, opts \\ []) do
+    data = %{app_id: app_id, instance_id: instance_id, ip_address: ip_addr, port: port}
 
     config(:proxy, %{type: :add_instance, data: data}, opts)
   end
 
-  def remove_instance(app_id, ip_addr, port, opts \\ []) do
-    data = %{app_id: app_id, ip_address: ip_addr, port: port}
+  def remove_instance(app_id, instance_id, ip_addr, port, opts \\ []) do
+    data = %{app_id: app_id, instance_id: instance_id, ip_address: ip_addr, port: port}
 
     config(:proxy, %{type: :remove_instance, data: data}, opts)
   end
