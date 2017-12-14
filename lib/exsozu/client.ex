@@ -1,6 +1,8 @@
 defmodule ExSozu.Client do
   use GenServer
 
+  require Logger
+
   alias ExSozu.Command
   alias ExSozu.Answer
   alias ExSozu.Protocol
@@ -8,7 +10,7 @@ defmodule ExSozu.Client do
   defstruct [socket: nil, commands: %{}, partial: nil]
 
   @sock_path Application.fetch_env!(:exsozu, :sock_path)
-  @sock_opts [:local, :binary, active: true]
+  @sock_opts [:local, :binary, active: :once]
 
   def start_link do
     GenServer.start_link(__MODULE__, %__MODULE__{}, name: __MODULE__)
@@ -21,31 +23,54 @@ defmodule ExSozu.Client do
 
   # API
 
-  def send!(commands) do
-    {:ok, answer} = GenServer.call(__MODULE__, {:send, commands})
+  @doc """
+  Sends `command` to Sozu.
+
+  Answers with the `Processing` status should be handled in a `GenServer.handle_info/2`
+  callback. The reply will be in the format `{:processing, %ExSozu.Answer{}}`.
+  """
+  def command!(command) do
+    {:ok, answer} = GenServer.call(__MODULE__, {:send, command})
     answer
   end
 
   # Callbacks
 
-  def handle_call({:send, commands}, from, state = %{socket: socket}) do
-    :ok = :gen_tcp.send(socket, Protocol.encode!(commands))
+  def handle_call({:send, command}, from, state = %{socket: socket}) do
+    :ok = :gen_tcp.send(socket, Protocol.encode!(command))
 
-    {:noreply, save_client(state, from, commands)}
+    {:noreply, save_client(state, from, command)}
   end
 
-  def handle_info({:tcp, _, message}, state = %{commands: commands, partial: partial}) do
-    {answers, partial} = Protocol.decode!(message, partial)
+  def handle_info({:tcp, socket, message}, state = %{commands: commands}) do
+    :inet.setopts(socket, active: :once)
 
-    commands = Enum.reduce(answers, commands, fn(answer = %Answer{id: id}, commands) ->
-      {%Command{client: client}, commands} = Map.pop(commands, id)
+    {answers, partial} = Protocol.decode!(message, state.partial)
 
-      GenServer.reply(client, {:ok, answer})
+    commands = Enum.reduce(answers, commands, fn
+      (answer = %Answer{id: id, status: "PROCESSING"}, commands) ->
+        %Command{client: {pid, _}} = Map.get(commands, id)
+        Process.send(pid, {:processing, answer}, [])
+        commands
 
-      commands
+      (answer = %Answer{id: id}, commands) ->
+        {command, commands} = Map.pop(commands, id)
+
+        case command do
+          %Command{client: client} -> GenServer.reply(client, {:ok, answer})
+          nil -> Logger.warn "Received unexpected answer: #{inspect answer}"
+        end
+
+        commands
     end)
 
     {:noreply, %{state | commands: commands, partial: partial}}
+  end
+
+  def handle_info({:tcp_closed, _port}, state) do
+    Logger.warn "Connection closed."
+
+    {:noreply, state}
   end
 
   # Helpers

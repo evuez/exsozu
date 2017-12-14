@@ -15,14 +15,9 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/exsozu](https://hexdocs.pm/exsozu).
-
 ## Examples
 
-    iex> ExSozu.start_link
-    iex> (ExSozu.multi
-          |> ExSozu.Command.dump_state
-          |> ExSozu.Command.soft_stop
-          |> ExSozu.send)
+```elixir
+iex> ExSozu.Command.status |> ExSozu.command!
+%ExSozu.Answer{data: nil, id: "zd/A+W+ylOHdfIB6", message: "", status: "OK"}
+```
