@@ -17,7 +17,6 @@ defmodule ExSozu.Client do
   @retry_delay 500
 
   def start_link do
-    IO.inspect :gen_tcp.connect({:local, @sock_path}, 0, @sock_opts), label: "gen tcp"
     GenServer.start_link(__MODULE__, %__MODULE__{}, name: __MODULE__)
   end
 

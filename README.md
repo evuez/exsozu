@@ -1,6 +1,6 @@
 # ExSozu
 
-[![Build Status](https://travis-ci.org/evuez/exsozu.svg?branch=master)](https://travis-ci.org/evuez/exsozu)
+[![CircleCI](https://circleci.com/gh/evuez/exsozu.svg?style=svg)](https://circleci.com/gh/evuez/exsozu)
 
 An Elixir client for the [Sōzu HTTP reverse proxy](https://github.com/sozu-proxy/sozu).
 

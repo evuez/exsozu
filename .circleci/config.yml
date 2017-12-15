@@ -1,0 +1,38 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Install Elixir
+          command: |
+            wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && sudo dpkg -i erlang-solutions_1.0_all.deb
+            sudo apt-get update -y
+            sudo apt-get install -y esl-erlang elixir
+      - restore_cache:
+          name: Restore Mix dependencies from cache
+          key: mix-{{ arch }}-{{ checksum "mix.lock" }}
+      - run:
+          name: Install project dependencies
+          command: |
+            mix local.hex --force
+            mix do deps.get, compile
+      - save_cache:
+          name: Cache Mix dependencies
+          key: mix-{{ arch }}-{{ checksum "mix.lock" }}
+          paths:
+            - deps/
+            - _build/
+      - run:
+          name: Build Sozu image
+          command: docker build -t local/sozu ./sozu/
+      - run:
+          name: Run linter
+          command: mix credo --strict
+      - run:
+          name: Run tests
+          command: |
+            docker run -d -p 127.0.0.1:8080:8080 -v $(pwd)/data:/data local/sozu
+            sudo chown -R $USER:$USER ./data
+            mix test
