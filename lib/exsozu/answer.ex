@@ -13,6 +13,10 @@ defmodule ExSozu.Answer do
                 do: message,
                 else: (_ -> answer.message)
 
-    %{answer | message: message}
+    %{answer | message: message, status: status(answer.status)}
   end
+
+  defp status("OK"), do: :ok
+  defp status("PROCESSING"), do: :processing
+  defp status("ERROR"), do: :error
 end

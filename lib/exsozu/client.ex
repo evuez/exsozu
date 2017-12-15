@@ -1,30 +1,28 @@
 defmodule ExSozu.Client do
   @moduledoc """
-  Handles the connection to Sozu.
+  Handles the connection to Sōzu.
   """
   use GenServer
 
   require Logger
 
-  alias ExSozu.Command
   alias ExSozu.Answer
+  alias ExSozu.Client.Lobby
   alias ExSozu.Protocol
 
-  defstruct [socket: nil, commands: %{}, partial: nil, retries: 0]
+  defstruct [socket: nil, partial: nil, retries: 0]
 
   @sock_path Application.fetch_env!(:exsozu, :sock_path)
   @sock_opts [:local, :binary, active: :once]
   @retry_delay 500
 
-  def start_link do
-    GenServer.start_link(__MODULE__, %__MODULE__{}, name: __MODULE__)
-  end
+  def start_link, do: GenServer.start_link(__MODULE__, %__MODULE__{}, name: __MODULE__)
 
   def init(state) do
     case :gen_tcp.connect({:local, @sock_path}, 0, @sock_opts) do
       {:ok, socket} -> {:ok, %{state | socket: socket}}
       {:error, _} ->
-        Logger.error "Cannot connect to Sozu, trying to reconnect..."
+        Logger.error "Cannot connect to Sōzu, trying to reconnect..."
         send(self(), :reconnect)
         {:ok, state}
     end
@@ -33,56 +31,39 @@ defmodule ExSozu.Client do
   # API
 
   @doc """
-  Sends `command` to Sozu.
+  Sends `command` to Sōzu.
 
-  Answers with the `Processing` status should be handled in a `GenServer.handle_info/2`
-  callback. The reply will be in the format `{:processing, %ExSozu.Answer{}}`.
+  Answers should be handled in a  `GenServer.handle_info/2` callback. Replies will be in
+  these formats:
+
+      {:answer, %ExSozu.Answer{status: :ok}}
+      {:answer, %ExSozu.Answer{status: :processing}}
+      {:answer, %ExSozu.Answer{status: :error}}
   """
-  def command!(command) do
-    {:ok, answer} = GenServer.call(__MODULE__, {:send, command})
-    answer
-  end
+  def command(command), do: GenServer.call(__MODULE__, {:command, command})
 
   # Callbacks
 
-  def handle_call({:send, command}, from, state = %{socket: socket}) do
-    :ok = :gen_tcp.send(socket, Protocol.encode!(command))
-
-    {:noreply, save_client(state, from, command)}
+  def handle_call({:command, command}, from, state = %{socket: socket}) do
+    Lobby.put(command.id, from)
+    {:reply, :gen_tcp.send(socket, Protocol.encode!(command)), state}
   end
 
-  def handle_info({:tcp, socket, message}, state = %{commands: commands}) do
+  def handle_info({:tcp, socket, message}, state) do
     :inet.setopts(socket, active: :once)
 
     {answers, partial} = Protocol.decode!(message, state.partial)
 
-    commands = Enum.reduce(answers, commands, fn
-      (answer = %Answer{id: id, status: "PROCESSING"}, commands) ->
-        %Command{client: {pid, _}} = Map.get(commands, id)
-        Process.send(pid, {:processing, answer}, [])
-        commands
+    for answer = %Answer{id: id} <- answers do
+      {pid, _} = Lobby.get(id)
+      Process.send(pid, {:answer, answer}, [])
+    end
 
-      (answer = %Answer{id: id}, commands) ->
-        {command, commands} = Map.pop(commands, id)
-
-        case command do
-          %Command{client: client} -> GenServer.reply(client, {:ok, answer})
-          nil -> Logger.warn "Received unexpected answer: #{inspect answer}"
-        end
-
-        commands
-    end)
-
-    {:noreply, %{state | commands: commands, partial: partial}}
+    {:noreply, %{state | partial: partial}}
   end
 
-  def handle_info({:tcp_closed, _port}, %{commands: commands}) when commands == %{} do
-    Logger.warn "Connection closed."
-
-    {:noreply, %__MODULE__{}}
-  end
   def handle_info({:tcp_closed, _port}, state) do
-    Logger.error "Connection closed with pending commands, trying to reconnect..."
+    Logger.error "Connection lost, trying to reconnect..."
 
     send(self(), :reconnect)
 
@@ -97,18 +78,11 @@ defmodule ExSozu.Client do
         {:noreply, %{state | socket: socket, retries: 0}}
       {:error, _} ->
         delay = round(@retry_delay * :math.pow(2, retries))
-        Logger.warn "Could not connect to Sozu, retrying in #{delay / 1000} seconds..."
+        Logger.warn "Could not connect to Sōzu, retrying in #{delay / 1000} seconds..."
 
         Process.send_after(self(), :reconnect, delay)
 
         {:noreply, %{state | socket: nil, retries: retries + 1}}
     end
-  end
-
-  # Helpers
-
-  defp save_client(state, client, command = %Command{}) do
-    commands = Map.put(state.commands, command.id, %{command | client: client})
-    %{state | commands: commands}
   end
 end

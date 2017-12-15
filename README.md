@@ -4,8 +4,7 @@
 
 An Elixir client for the [Sōzu HTTP reverse proxy](https://github.com/sozu-proxy/sozu).
 
-This is mostly a draft and while it works fine if you just want to order Sōzu do do stuff, you won't be able to get answers from every worker for some commands (though they'll always be logged).
-Checkout [this branch](https://github.com/evuez/exsozu/tree/async-messages) for a better handling of Sōzu's answers.
+Answers are sent to the calling process via `Process.send/3` and should be handled in a `handle_info/2` or using `receive/1` (the messages are in this format: `{:ansers, %ExSozu.Answer{}}`).
 
 The documentation is available at [https://hexdocs.pm/exsozu](https://hexdocs.pm/exsozu).
 
@@ -15,15 +14,19 @@ Add `exsozu` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:exsozu, "~> 0.1.0"}]
+  [{:exsozu, "~> 0.2.0"}]
 end
 ```
 
 ## Examples
 
 ```elixir
-iex> ExSozu.Command.status |> ExSozu.command!
-%ExSozu.Answer{data: nil, id: "zd/A+W+ylOHdfIB6", message: "", status: "OK"}
+iex> ExSozu.Command.list_workers() |> ExSozu.command()
+iex> receive do: (m -> m)
+{:answer,
+ %ExSozu.Answer{data: %{"data" => [%{"id" => 0, "pid" => 9,
+   "run_state" => "RUNNING"}], "type" => "WORKERS"}, id: "oA7iu2qVAL2JNkBg",
+ message: "", status: :ok}}
 ```
 
-I also made an UI using the [async-messages](https://github.com/evuez/exsozu/tree/async-messages) branch [here](https://github.com/evuez/sozui).
+I also made a demo interface using ExSozu: [https://github.com/evuez/sozui](https://github.com/evuez/sozui).

@@ -1,9 +1,9 @@
 defmodule ExSozu do
   @moduledoc """
-  Provides the main API to interface with Sozu.
+  Provides the main API to interface with Sōzu.
   """
 
   alias ExSozu.Client
 
-  defdelegate command!(command), to: Client
+  defdelegate command(command), to: Client
 end
