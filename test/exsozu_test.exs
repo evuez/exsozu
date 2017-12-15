@@ -4,11 +4,6 @@ defmodule ExSozuTest do
   alias ExSozu.Answer
   doctest ExSozu
 
-  setup_all do
-    Application.ensure_all_started(:exsozu)
-    :ok
-  end
-
   test "add_instance/3 and remove_instance/3" do
     assert %Answer{status: "OK"} =
       ExSozu.command!(Command.add_instance("Test", "Test-0", "127.0.0.1", 8001))

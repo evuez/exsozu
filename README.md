@@ -4,10 +4,13 @@
 
 An Elixir client for the [Sōzu HTTP reverse proxy](https://github.com/sozu-proxy/sozu).
 
+This is mostly a draft and while it works fine if you just want to order Sōzu do do stuff, you won't be able to get answers from every workers for some commands (though they'll always be logged).
+
+The documentation is available at [https://hexdocs.pm/exsozu](https://hexdocs.pm/exsozu).
+
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `exsozu` to your list of dependencies in `mix.exs`:
+Add `exsozu` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
