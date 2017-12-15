@@ -1,4 +1,6 @@
 defmodule ExSozu.Client.Lobby do
+  @moduledoc false
+
   defstruct [lobby: %{}, queue: :queue.new(), size: 0]
 
   @max_size 1_000

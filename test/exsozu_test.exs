@@ -5,42 +5,49 @@ defmodule ExSozuTest do
   doctest ExSozu
 
   test "add_instance/4 and remove_instance/4" do
-    assert %Answer{status: :ok} =
-      ExSozu.command!(Command.add_instance("Test", "Test-0", "127.0.0.1", 8001))
-    assert %Answer{status: :ok} =
-      ExSozu.command!(Command.remove_instance("Test", "Test-0", "127.0.0.1", 8001))
+    ExSozu.command(Command.add_instance("Test", "Test-0", "127.0.0.1", 8001))
+    ExSozu.command(Command.remove_instance("Test", "Test-0", "127.0.0.1", 8001))
+
+    assert_receive {:answer, %Answer{status: :ok}}
+    assert_receive {:answer, %Answer{status: :ok}}
   end
 
   test "dump_state/0" do
-    assert %Answer{data: %{"data" => %{"applications" =>
+    ExSozu.command(Command.dump_state())
+
+    assert_receive {:answer, %Answer{data: %{"data" => %{"applications" =>
       %{"Test" => %{"app_id" => "Test", "sticky_session" => false}},
       "certificates" => %{},
       "http_addresses" => [],
       "http_fronts" => %{"Test" => _},
       "https_addresses" => [], "https_fronts" => %{},
-      "instances" => %{"Test" => _}}, "type" => "STATE"}, status: :ok} =
-          ExSozu.command!(Command.dump_state())
+      "instances" => %{"Test" => _}}, "type" => "STATE"}, status: :ok}}
   end
 
   test "list_workers/0 returns a valid command" do
-    assert %Answer{data: %{"data" => data, "type" => "WORKERS"}, status: :ok} =
-      ExSozu.command!(Command.list_workers())
+    ExSozu.command(Command.list_workers())
+
+    assert_receive {:answer, %Answer{data: %{"data" => data, "type" => "WORKERS"}, status: :ok}}
     assert [%{"run_state" => "RUNNING"}] = data
   end
 
   test "save_state/1 and load_state/1" do
-    assert %Answer{status: :ok} =
-      ExSozu.command!(Command.save_state("state.json"))
-    assert %Answer{status: :ok} =
-      ExSozu.command!(Command.load_state("state.json"))
+    ExSozu.command(Command.save_state("state.json"))
+    ExSozu.command(Command.load_state("state.json"))
+
+    assert_receive {:answer, %Answer{status: :ok}}
+    assert_receive {:answer, %Answer{status: :ok}}
   end
 
   test "status/0 returns a valid command" do
-    assert %Answer{status: :ok} = ExSozu.command!(Command.status())
+    ExSozu.command(Command.status())
+
+    assert_receive {:answer, %Answer{status: :ok}}
   end
 
   test "upgrade_master/0" do
-    assert %Answer{status: :ok} = ExSozu.command!(Command.upgrade_master())
-    :timer.sleep(4000)
+    ExSozu.command(Command.upgrade_master())
+
+    assert_receive {:answer, %Answer{status: :ok}}
   end
 end
