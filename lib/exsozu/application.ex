@@ -7,7 +7,6 @@ defmodule ExSozu.Application do
     import Supervisor.Spec, warn: false
 
     children = [
-      worker(ExSozu.Client.Lobby, [], restart: :transient),
       worker(ExSozu.Client, [], restart: :transient),
     ]
 

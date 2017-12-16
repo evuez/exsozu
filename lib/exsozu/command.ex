@@ -5,20 +5,17 @@ defmodule ExSozu.Command do
   If you can't find a command in this list, you can create one like this:
 
       %ExSozu.Command{
-        id: "<some random id>",
         type: <type (must be an atom)>,
         proxy_id: <the proxy id, if any>,
         data: <whatever needs to be send>
       }
 
-  You can then send it using `ExSozu.command!/1`.
+  You can then send it using `ExSozu.command/1`.
   """
   alias ExSozu.Command
 
   @derive {Poison.Encoder, except: [:client, :name]}
   defstruct [:client, :name, :id, :type, :data, :proxy_id, version: 0]
-
-  @id_length 16
 
   def to_json!(command = %__MODULE__{}) do
     command = Map.update!(command, :type, &upcase_atom/1)
@@ -135,16 +132,9 @@ defmodule ExSozu.Command do
 
   defp config(type, data \\ nil, opts) do
     %Command{
-      id: id(),
       type: type,
       proxy_id: opts[:proxy_id],
       data: data
     }
-  end
-
-  defp id do
-    :crypto.strong_rand_bytes(@id_length)
-    |> Base.encode64
-    |> binary_part(0, @id_length)
   end
 end

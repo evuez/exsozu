@@ -7,7 +7,6 @@ defmodule ExSozu.Client do
   require Logger
 
   alias ExSozu.Answer
-  alias ExSozu.Client.Lobby
   alias ExSozu.Protocol
 
   defstruct [socket: nil, partial: nil, retries: 0]
@@ -45,8 +44,10 @@ defmodule ExSozu.Client do
   # Callbacks
 
   def handle_call({:command, command}, from, state = %{socket: socket}) do
-    Lobby.put(command.id, from)
-    {:reply, :gen_tcp.send(socket, Protocol.encode!(command)), state}
+    id = caller_to_id(from)
+    command = Protocol.encode!(%{command | id: id})
+    :ok = :gen_tcp.send(socket, command)
+    {:reply, {:ok, id}, state}
   end
 
   def handle_info({:tcp, socket, message}, state) do
@@ -54,10 +55,8 @@ defmodule ExSozu.Client do
 
     {answers, partial} = Protocol.decode!(message, state.partial)
 
-    for answer = %Answer{id: id} <- answers do
-      {pid, _} = Lobby.get(id)
-      Process.send(pid, {:answer, answer}, [])
-    end
+    for answer = %Answer{id: id} <- answers,
+      do: id_to_pid(id) |> Process.send({:answer, answer}, [])
 
     {:noreply, %{state | partial: partial}}
   end
@@ -84,5 +83,12 @@ defmodule ExSozu.Client do
 
         {:noreply, %{state | socket: nil, retries: retries + 1}}
     end
+  end
+
+  defp caller_to_id(caller), do: :erlang.term_to_binary(caller) |> Base.encode64
+
+  defp id_to_pid(id) do
+    {pid, _tag} = id |> Base.decode64!() |> :erlang.binary_to_term()
+    pid
   end
 end
