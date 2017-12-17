@@ -25,3 +25,5 @@ end
 iex> ExSozu.Command.status |> ExSozu.command!
 %ExSozu.Answer{data: nil, id: "zd/A+W+ylOHdfIB6", message: "", status: "OK"}
 ```
+
+I also made an UI using the [async-messages](https://github.com/evuez/exsozu/tree/async-messages) branch [here](https://github.com/evuez/sozui).
