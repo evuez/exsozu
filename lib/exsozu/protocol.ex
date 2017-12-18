@@ -6,12 +6,17 @@ defmodule ExSozu.Protocol do
   alias ExSozu.Answer
   alias ExSozu.Command
 
+  @doc """
+  Encodes a command.
+  """
+  @spec encode!(Command.t) :: binary
   def encode!(command),
     do: Command.to_json!(command) <> <<0>>
 
   @doc """
   Decodes a message into answers.
   """
+  @spec decode!(binary) :: {[Command.t], partial :: nil | binary}
   def decode!(message), do: decode!(message, [])
   def decode!(message, nil), do: decode!(message, [])
   def decode!(message, partial) when is_binary(partial),

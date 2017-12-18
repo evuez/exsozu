@@ -3,13 +3,13 @@ defmodule ExSozu.Mixfile do
 
   def project do
     [app: :exsozu,
-     version: "0.1.0",
+     version: "0.2.0",
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps(),
      package: package(),
-     description: "An Elixir client for the Sōzu HTTP reverse proxy.",
+     description: "A resilient Elixir client for the Sōzu HTTP reverse proxy.",
      source_url: "https://github.com/evuez/exsozu",
      homepage_url: "https://github.com/evuez/exsozu"]
   end

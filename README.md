@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/evuez/exsozu.svg?style=svg)](https://circleci.com/gh/evuez/exsozu)
 
-An Elixir client for the [Sōzu HTTP reverse proxy](https://github.com/sozu-proxy/sozu).
+A resilient Elixir client for the [Sōzu HTTP reverse proxy](https://github.com/sozu-proxy/sozu).
 
 Answers are sent to the calling process via `Process.send/3` and should be handled in a `handle_info/2` or using `receive/1` (the messages are in this format: `{:ansers, %ExSozu.Answer{}}`).
 
