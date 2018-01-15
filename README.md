@@ -32,7 +32,7 @@ iex> receive do: (m -> m)
 Or, using `ExSozu.pipeline/1` to send multiple commands at once:
 
 ```elixir
-iex> [ExSozu.Command.list_workers(), ExSozu.Command.status()] |> ExSozu.command()
+iex> [ExSozu.Command.list_workers(), ExSozu.Command.status()] |> ExSozu.pipeline()
 iex> receive do: (m -> m)
 {:answer,
  %ExSozu.Answer{data: %{"data" => [%{"id" => 0, "pid" => 9,
