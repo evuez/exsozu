@@ -9,7 +9,9 @@ defmodule ExSozu.Protocol do
   @doc """
   Encodes a command.
   """
-  @spec encode!(Command.t) :: binary
+  @spec encode!(Command.t | [Command.t]) :: binary
+  def encode!(commands) when is_list(commands),
+    do: Enum.map_join(commands, &encode!/1)
   def encode!(command),
     do: Command.to_json!(command) <> <<0>>
 

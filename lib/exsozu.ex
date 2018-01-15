@@ -56,6 +56,12 @@ defmodule ExSozu do
   @spec command(Command.t) :: {:ok, command_id :: String.t}
   def command(command), do: GenServer.call(__MODULE__, {:command, command})
 
+  @doc """
+  Sends a list of commands to Sōzu.
+  """
+  @spec pipeline([Command.t]) :: {:ok, command_ids :: [String.t]}
+  def pipeline(commands), do: GenServer.call(__MODULE__, {:pipeline, commands})
+
   # Callbacks
 
   @doc false
@@ -64,6 +70,16 @@ defmodule ExSozu do
     command = Protocol.encode!(%{command | id: id})
     :ok = :gen_tcp.send(socket, command)
     {:reply, {:ok, id}, state}
+  end
+
+  @doc false
+  def handle_call({:pipeline, commands}, from, state = %{socket: socket}) do
+    commands = Enum.map(commands, fn command ->
+      %{command | id: caller_to_id(from, :unique)}
+    end)
+
+    :ok = :gen_tcp.send(socket, commands |> Protocol.encode!())
+    {:reply, {:ok, Enum.map(commands, &(&1.id))}, state}
   end
 
   @doc false
@@ -105,9 +121,13 @@ defmodule ExSozu do
   end
 
   defp caller_to_id(caller), do: :erlang.term_to_binary(caller) |> Base.encode64
+  defp caller_to_id(caller, :unique),
+    do: :erlang.term_to_binary({caller, make_ref()}) |> Base.encode64
 
   defp id_to_pid(id) do
-    {pid, _tag} = id |> Base.decode64!() |> :erlang.binary_to_term()
-    pid
+    case id |> Base.decode64!() |> :erlang.binary_to_term() do
+      {{pid, _ref}, _tag} -> pid
+      {pid, _ref} -> pid
+    end
   end
 end
