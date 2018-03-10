@@ -9,24 +9,28 @@ defmodule ExSozu.Protocol do
   @doc """
   Encodes a command.
   """
-  @spec encode!(Command.t | [Command.t]) :: binary
-  def encode!(commands) when is_list(commands),
-    do: Enum.map_join(commands, &encode!/1)
-  def encode!(command),
-    do: Command.to_json!(command) <> <<0>>
+  @spec encode!(Command.t() | [Command.t()]) :: binary
+  def encode!(commands) when is_list(commands), do: Enum.map_join(commands, &encode!/1)
+  def encode!(command), do: Command.to_json!(command) <> <<0>>
 
   @doc """
   Decodes a message into answers.
   """
-  @spec decode!(binary) :: {[Command.t], partial :: nil | binary}
+  @spec decode!(binary) :: {[Command.t()], partial :: nil | binary}
   def decode!(message), do: decode!(message, [])
   def decode!(message, nil), do: decode!(message, [])
+
   def decode!(message, partial) when is_binary(partial),
     do: decode!(partial <> message, [])
+
   def decode!(message, acc) when is_list(acc) do
     case String.split(message, <<0>>, parts: 2) do
-      [partial] -> {Enum.reverse(acc), partial}
-      [answer, ""] -> {Enum.reverse([Answer.from_json!(answer) | acc]), nil}
+      [partial] ->
+        {Enum.reverse(acc), partial}
+
+      [answer, ""] ->
+        {Enum.reverse([Answer.from_json!(answer) | acc]), nil}
+
       [answer, rest] ->
         decode!(rest, [Answer.from_json!(answer) | acc])
     end

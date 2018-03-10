@@ -17,12 +17,12 @@ defmodule ExSozu.Command do
   """
 
   @type t :: %__MODULE__{
-    id: String.t,
-    version: 0,
-    type: atom,
-    data: nil | map,
-    proxy_id: nil | integer
-  }
+          id: String.t(),
+          version: 0,
+          type: atom,
+          data: nil | map,
+          proxy_id: nil | integer
+        }
   @type options :: [proxy_id: nil | integer]
 
   @derive [Poison.Encoder]
@@ -31,8 +31,10 @@ defmodule ExSozu.Command do
   @doc false
   def to_json!(command = %__MODULE__{}) do
     command = Map.update!(command, :type, &upcase_atom/1)
-    command = with %{data: %{type: type}} <- command,
-                do: put_in(command.data.type, upcase_atom(type))
+
+    command =
+      with %{data: %{type: type}} <- command,
+           do: put_in(command.data.type, upcase_atom(type))
 
     command = with %{proxy_id: nil} <- command, do: Map.delete(command, :proxy_id)
     command = with %{data: nil} <- command, do: Map.delete(command, :data)
@@ -40,7 +42,7 @@ defmodule ExSozu.Command do
     Poison.encode!(command)
   end
 
-  defp upcase_atom(atom), do: atom |> Atom.to_string |> String.upcase
+  defp upcase_atom(atom), do: atom |> Atom.to_string() |> String.upcase()
 
   # State
 
@@ -54,12 +56,12 @@ defmodule ExSozu.Command do
     config(:dump_state, opts)
   end
 
-  @spec save_state(path :: String.t, options) :: t
+  @spec save_state(path :: String.t(), options) :: t
   def save_state(path, opts \\ []) do
     config(:save_state, %{path: path}, opts)
   end
 
-  @spec load_state(path :: String.t, options) :: t
+  @spec load_state(path :: String.t(), options) :: t
   def load_state(path, opts \\ []) do
     config(:load_state, %{path: path}, opts)
   end
@@ -78,50 +80,62 @@ defmodule ExSozu.Command do
 
   # Fronts
 
-  @spec add_http_front(app_id :: String.t,
-                       host :: String.t,
-                       path_begin :: String.t,
-                       options) :: t
+  @spec add_http_front(
+          app_id :: String.t(),
+          host :: String.t(),
+          path_begin :: String.t(),
+          options
+        ) :: t
   def add_http_front(app_id, host, path_begin, opts \\ []) do
     data = %{app_id: app_id, hostname: host, path_begin: path_begin}
 
     config(:proxy, %{type: :add_http_front, data: data}, opts)
   end
 
-  @spec add_https_front(app_id :: String.t,
-                        host :: String.t,
-                        path_begin :: String.t,
-                        fingerprint :: String.t,
-                        options) :: t
+  @spec add_https_front(
+          app_id :: String.t(),
+          host :: String.t(),
+          path_begin :: String.t(),
+          fingerprint :: String.t(),
+          options
+        ) :: t
   def add_https_front(app_id, host, path_begin, fingerprint, opts \\ []) do
-    data = %{app_id: app_id,
-            hostname: host,
-            path_begin: path_begin,
-            fingerprint: fingerprint}
+    data = %{
+      app_id: app_id,
+      hostname: host,
+      path_begin: path_begin,
+      fingerprint: fingerprint
+    }
 
     config(:proxy, %{type: :add_https_front, data: data}, opts)
   end
 
-  @spec remove_http_front(app_id :: String.t,
-                          host :: String.t,
-                          path_begin :: String.t,
-                          options) :: t
+  @spec remove_http_front(
+          app_id :: String.t(),
+          host :: String.t(),
+          path_begin :: String.t(),
+          options
+        ) :: t
   def remove_http_front(app_id, host, path_begin, opts \\ []) do
     data = %{app_id: app_id, hostname: host, path_begin: path_begin}
 
     config(:proxy, %{type: :remove_http_front, data: data}, opts)
   end
 
-  @spec remove_https_front(app_id :: String.t,
-                           host :: String.t,
-                           path_begin :: String.t,
-                           fingerprint :: String.t,
-                           options) :: t
+  @spec remove_https_front(
+          app_id :: String.t(),
+          host :: String.t(),
+          path_begin :: String.t(),
+          fingerprint :: String.t(),
+          options
+        ) :: t
   def remove_https_front(app_id, host, path_begin, fingerprint, opts \\ []) do
-    data = %{app_id: app_id,
-            hostname: host,
-            path_begin: path_begin,
-            fingerprint: fingerprint}
+    data = %{
+      app_id: app_id,
+      hostname: host,
+      path_begin: path_begin,
+      fingerprint: fingerprint
+    }
 
     config(:proxy, %{type: :remove_https_front, data: data}, opts)
   end
@@ -135,22 +149,26 @@ defmodule ExSozu.Command do
 
   # Instances
 
-  @spec add_instance(app_id :: String.t,
-                     instance_id :: String.t,
-                     ip_addr :: String.t,
-                     port :: integer,
-                     options) :: t
+  @spec add_instance(
+          app_id :: String.t(),
+          instance_id :: String.t(),
+          ip_addr :: String.t(),
+          port :: integer,
+          options
+        ) :: t
   def add_instance(app_id, instance_id, ip_addr, port, opts \\ []) do
     data = %{app_id: app_id, instance_id: instance_id, ip_address: ip_addr, port: port}
 
     config(:proxy, %{type: :add_instance, data: data}, opts)
   end
 
-  @spec remove_instance(app_id :: String.t,
-                        instance_id :: String.t,
-                        ip_addr :: String.t,
-                        port :: integer,
-                        options) :: t
+  @spec remove_instance(
+          app_id :: String.t(),
+          instance_id :: String.t(),
+          ip_addr :: String.t(),
+          port :: integer,
+          options
+        ) :: t
   def remove_instance(app_id, instance_id, ip_addr, port, opts \\ []) do
     data = %{app_id: app_id, instance_id: instance_id, ip_address: ip_addr, port: port}
 
@@ -159,17 +177,19 @@ defmodule ExSozu.Command do
 
   # Certificates
 
-  @spec add_certificate(cert :: String.t,
-                        cert_chain :: [String.t],
-                        key :: String.t,
-                        options) :: t
+  @spec add_certificate(
+          cert :: String.t(),
+          cert_chain :: [String.t()],
+          key :: String.t(),
+          options
+        ) :: t
   def add_certificate(cert, cert_chain, key, opts \\ []) do
     data = %{certificate: cert, certificate_chain: cert_chain, key: key}
 
     config(:proxy, %{type: :add_certificate, data: data}, opts)
   end
 
-  @spec remove_certificate(data :: String.t, options) :: t
+  @spec remove_certificate(data :: String.t(), options) :: t
   def remove_certificate(data, opts \\ []) do
     config(:proxy, %{type: :remove_certificate, data: data}, opts)
   end

@@ -1,4 +1,3 @@
 use Mix.Config
 
-config :exsozu,
-  sock_path: "data/sock"
+config :exsozu, sock_path: "data/sock"

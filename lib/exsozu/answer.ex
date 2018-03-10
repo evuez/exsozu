@@ -4,7 +4,12 @@ defmodule ExSozu.Answer do
   """
 
   @type status :: :ok | :processing | :error
-  @type t :: %__MODULE__{id: String.t, status: status, message: String.t, data: nil | map}
+  @type t :: %__MODULE__{
+          id: String.t(),
+          status: status,
+          message: String.t(),
+          data: nil | map
+        }
 
   @derive [Poison.Encoder]
   defstruct [:id, :status, :message, :data]
@@ -13,9 +18,10 @@ defmodule ExSozu.Answer do
   def from_json!(json) do
     answer = Poison.decode!(json, as: %__MODULE__{})
 
-    message = with {:ok, message} <- Poison.decode(answer.message),
-                do: message,
-                else: (_ -> answer.message)
+    message =
+      with {:ok, message} <- Poison.decode(answer.message),
+           do: message,
+           else: (_ -> answer.message)
 
     %{answer | message: message, status: status(answer.status)}
   end
