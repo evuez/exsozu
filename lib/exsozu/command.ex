@@ -147,32 +147,32 @@ defmodule ExSozu.Command do
     config(:list_workers, opts)
   end
 
-  # Instances
+  # Backends
 
-  @spec add_instance(
+  @spec add_backend(
           app_id :: String.t(),
-          instance_id :: String.t(),
+          backend_id :: String.t(),
           ip_addr :: String.t(),
           port :: integer,
           options
         ) :: t
-  def add_instance(app_id, instance_id, ip_addr, port, opts \\ []) do
-    data = %{app_id: app_id, instance_id: instance_id, ip_address: ip_addr, port: port}
+  def add_backend(app_id, backend_id, ip_addr, port, opts \\ []) do
+    data = %{app_id: app_id, backend_id: backend_id, ip_address: ip_addr, port: port}
 
-    config(:proxy, %{type: :add_instance, data: data}, opts)
+    config(:proxy, %{type: :add_backend, data: data}, opts)
   end
 
-  @spec remove_instance(
+  @spec remove_backend(
           app_id :: String.t(),
-          instance_id :: String.t(),
+          backend_id :: String.t(),
           ip_addr :: String.t(),
           port :: integer,
           options
         ) :: t
-  def remove_instance(app_id, instance_id, ip_addr, port, opts \\ []) do
-    data = %{app_id: app_id, instance_id: instance_id, ip_address: ip_addr, port: port}
+  def remove_backend(app_id, backend_id, ip_addr, port, opts \\ []) do
+    data = %{app_id: app_id, backend_id: backend_id, ip_address: ip_addr, port: port}
 
-    config(:proxy, %{type: :remove_instance, data: data}, opts)
+    config(:proxy, %{type: :remove_backend, data: data}, opts)
   end
 
   # Certificates

@@ -14,7 +14,7 @@ Add `exsozu` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:exsozu, "~> 0.3.0"}]
+  [{:exsozu, "~> 0.4.0"}]
 end
 ```
 

@@ -19,7 +19,7 @@ defmodule ExSozuTest do
                           "http_fronts" => %{"Test" => _},
                           "https_addresses" => [],
                           "https_fronts" => %{},
-                          "instances" => %{"Test" => _}
+                          "backends" => %{"Test" => _}
                         },
                         "type" => "STATE"
                       },
@@ -33,9 +33,9 @@ defmodule ExSozuTest do
     assert [%{"run_state" => "RUNNING"}] = data
   end
 
-  test "add_instance/4 and remove_instance/4" do
-    ExSozu.command(Command.add_instance("Test", "Test-0", "127.0.0.1", 8001))
-    ExSozu.command(Command.remove_instance("Test", "Test-0", "127.0.0.1", 8001))
+  test "add_backend/4 and remove_backend/4" do
+    ExSozu.command(Command.add_backend("Test", "Test-0", "127.0.0.1", 8001))
+    ExSozu.command(Command.remove_backend("Test", "Test-0", "127.0.0.1", 8001))
 
     assert_receive {:answer, %Answer{status: :ok}}
     assert_receive {:answer, %Answer{status: :ok}}
@@ -56,7 +56,7 @@ defmodule ExSozuTest do
                           "http_fronts" => %{"Test" => _},
                           "https_addresses" => [],
                           "https_fronts" => %{},
-                          "instances" => %{"Test" => _}
+                          "backends" => %{"Test" => _}
                         },
                         "type" => "STATE"
                       },
