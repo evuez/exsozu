@@ -4,7 +4,7 @@
 
 A resilient Elixir client for the [Sōzu HTTP reverse proxy](https://github.com/sozu-proxy/sozu).
 
-Answers are sent to the calling process via `Process.send/3` and should be handled in a `handle_info/2` or using `receive/1` (the messages are in this format: `{:ansers, %ExSozu.Answer{}}`).
+Answers are sent to the calling process via `Process.send/3` and should be handled in a `handle_info/2` or using `receive/1` (the messages are in this format: `{:answer, %ExSozu.Answer{}}`).
 
 The documentation is available at [https://hexdocs.pm/exsozu](https://hexdocs.pm/exsozu).
 
